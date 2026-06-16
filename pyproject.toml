@@ -1,0 +1,55 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "embodied-care-ai-lab"
+version = "0.1.0"
+description = "Research prototypes for human-centered, sex-aware, and care-centered AI evaluation."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [
+  { name = "Embodied Care AI Lab" }
+]
+keywords = [
+  "ai-safety",
+  "health-ai",
+  "benchmarking",
+  "women-health",
+  "human-centered-ai"
+]
+dependencies = [
+  "pandas>=2.2",
+  "pydantic>=2.7",
+  "rich>=13.7",
+  "typer>=0.12"
+]
+
+[project.optional-dependencies]
+dev = [
+  "mypy>=1.10",
+  "pandas-stubs>=2.2",
+  "pytest>=8.2",
+  "ruff>=0.5"
+]
+
+[project.scripts]
+embodied-care = "embodied_care_ai.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/embodied_care_ai"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["B", "E", "F", "I", "UP"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unused_ignores = true
+warn_return_any = true
+files = ["src", "tests"]
