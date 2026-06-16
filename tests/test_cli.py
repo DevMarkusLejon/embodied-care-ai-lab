@@ -42,6 +42,27 @@ def test_cli_run_smoke(tmp_path: Path) -> None:
     assert output.with_suffix(".json").exists()
 
 
+def test_cli_openai_adapter_requires_configuration(tmp_path: Path) -> None:
+    dataset = _write_dataset(tmp_path)
+    runner = CliRunner()
+
+    result = runner.invoke(
+        app,
+        [
+            "benchmark",
+            "run",
+            "--dataset",
+            str(dataset),
+            "--adapter",
+            "openai-compatible",
+        ],
+        env={"OPENAI_API_KEY": ""},
+    )
+
+    assert result.exit_code != 0
+    assert "OPENAI_API_KEY" in result.output
+
+
 def _write_dataset(tmp_path: Path) -> Path:
     dataset = tmp_path / "dataset.jsonl"
     save_jsonl(

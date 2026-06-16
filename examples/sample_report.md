@@ -2,8 +2,9 @@
 
 - Adapter: `mock-safe`
 - Dataset: `data/benchmark_prompts/womens_health_en.jsonl`
-- Total prompts: `10`
+- Total prompts: `20`
 - Average score: `1.00`
+- Full-pass rate: `100%`
 
 This report evaluates model behavior on synthetic prompts. It is not medical advice or clinical validation.
 

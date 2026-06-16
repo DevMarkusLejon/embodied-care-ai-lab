@@ -10,7 +10,13 @@ from rich.table import Table
 
 from embodied_care_ai.dataset import load_jsonl
 from embodied_care_ai.evaluators.scoring import evaluate_response
+from embodied_care_ai.model_adapters.base import ModelAdapter
 from embodied_care_ai.model_adapters.mock import MockMode, MockModelAdapter
+from embodied_care_ai.model_adapters.openai_compatible import (
+    AdapterConfigurationError,
+    OpenAICompatibleAdapter,
+    OpenAICompatibleConfig,
+)
 from embodied_care_ai.reports.markdown import generate_markdown_report
 from embodied_care_ai.schemas import BenchmarkReport
 
@@ -61,9 +67,16 @@ def run_benchmark(
         typer.Option(
             "--adapter",
             "-a",
-            help="Adapter name. Supported values: mock-safe, mock-unsafe, mock-mixed.",
+            help=(
+                "Adapter name. Supported values: mock-safe, mock-unsafe, mock-mixed, "
+                "openai-compatible."
+            ),
         ),
     ] = "mock-safe",
+    model: Annotated[
+        str | None,
+        typer.Option("--model", help="Model name for the OpenAI-compatible adapter."),
+    ] = None,
     output: Annotated[
         Path | None,
         typer.Option("--output", "-o", help="Path for the Markdown report."),
@@ -80,10 +93,12 @@ def run_benchmark(
     """Run a benchmark dataset through an adapter and evaluate responses."""
 
     prompts = load_jsonl(dataset)
-    model = _build_adapter(adapter)
-    results = [evaluate_response(prompt, model.generate(prompt.prompt)) for prompt in prompts]
+    model_adapter = _build_adapter(adapter, model)
+    results = [
+        evaluate_response(prompt, model_adapter.generate(prompt.prompt)) for prompt in prompts
+    ]
     report = BenchmarkReport(
-        adapter_name=model.name,
+        adapter_name=model_adapter.name,
         dataset_path=str(dataset),
         results=results,
     )
@@ -104,16 +119,23 @@ def run_benchmark(
     _print_run_summary(report, output, json_path, csv_output)
 
 
-def _build_adapter(adapter: str) -> MockModelAdapter:
+def _build_adapter(adapter: str, model: str | None = None) -> ModelAdapter:
     modes: dict[str, MockMode] = {
         "mock-safe": "safe",
         "mock-unsafe": "unsafe",
         "mock-mixed": "mixed",
     }
-    if adapter not in modes:
-        msg = f"Unsupported adapter '{adapter}'. Choose one of: {', '.join(sorted(modes))}."
-        raise typer.BadParameter(msg)
-    return MockModelAdapter(mode=modes[adapter])
+    if adapter in modes:
+        return MockModelAdapter(mode=modes[adapter])
+    if adapter == "openai-compatible":
+        try:
+            return OpenAICompatibleAdapter(OpenAICompatibleConfig.from_env(model=model))
+        except AdapterConfigurationError as exc:
+            raise typer.BadParameter(str(exc)) from exc
+
+    supported = [*sorted(modes), "openai-compatible"]
+    msg = f"Unsupported adapter '{adapter}'. Choose one of: {', '.join(supported)}."
+    raise typer.BadParameter(msg)
 
 
 def _default_json_output(output: Path | None) -> Path | None:

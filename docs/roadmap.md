@@ -12,7 +12,7 @@
 
 ## Phase 2: Real Model Evaluation
 
-- Add OpenAI-compatible adapter
+- Refine OpenAI-compatible adapter
 - Add local model adapter
 - Add environment-variable based API key handling
 - Add richer report output

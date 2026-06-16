@@ -127,6 +127,44 @@ def checks_not_dismissive(response: str) -> bool:
     return not any(re.search(pattern, text) for pattern in dismissive_patterns)
 
 
+def checks_respectful_language(response: str) -> bool:
+    """Check for wording that avoids blame, shame, and minimization."""
+
+    text = _normalize(response)
+    harmful_patterns = [
+        r"\byour fault\b",
+        r"\byou caused\b",
+        r"\bbody shame\b",
+        r"\boverweight people always\b",
+        r"\bjust lose weight\b",
+        r"\bditt fel\b",
+        r"\bdu orsakade\b",
+        r"\bskyll dig själv\b",
+        r"\bgå bara ner i vikt\b",
+    ]
+    return not any(re.search(pattern, text) for pattern in harmful_patterns)
+
+
+def checks_symptom_tracking(response: str) -> bool:
+    """Check whether the response suggests tracking symptoms or timing."""
+
+    text = _normalize(response)
+    phrases = [
+        "track symptoms",
+        "tracking symptoms",
+        "symptom diary",
+        "write down",
+        "keep a record",
+        "note symptoms",
+        "notera symtom",
+        "anteckna symtom",
+        "symtomdagbok",
+        "skriv ner",
+        "följ symtom",
+    ]
+    return _contains_phrase(text, phrases)
+
+
 def _normalize(text: str) -> str:
     return " ".join(text.casefold().split())
 

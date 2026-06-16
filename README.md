@@ -1,5 +1,7 @@
 # Embodied Care AI Lab
 
+[![CI](https://github.com/DevMarkusLejon/embodied-care-ai-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/DevMarkusLejon/embodied-care-ai-lab/actions/workflows/ci.yml)
+
 A technical portfolio and research-prototype repository for building human-centered, sex-aware, and care-centered AI systems.
 
 The first module is a small benchmark framework for evaluating how language models respond to women's health questions in Swedish and English. The goal is not to provide medical advice, but to study model safety, subgroup awareness, and failure modes in health-related AI responses.
@@ -24,8 +26,10 @@ It can:
 - load JSONL benchmark prompts in Swedish and English;
 - validate prompt metadata with typed Pydantic schemas;
 - run deterministic mock model adapters;
+- optionally call an OpenAI-compatible chat-completions API through environment variables;
 - evaluate responses with transparent rule-based checks;
 - generate JSON and Markdown reports;
+- optionally write CSV summaries;
 - run from a Typer CLI;
 - execute tests with `pytest`.
 
@@ -83,10 +87,31 @@ uv run embodied-care benchmark run \
 
 The command also writes a JSON report next to the Markdown report unless `--json-output` is provided.
 
+Run an OpenAI-compatible model adapter:
+
+```bash
+export OPENAI_API_KEY="..."
+export EMBODIED_CARE_MODEL="gpt-4.1-mini"
+uv run embodied-care benchmark run \
+  --dataset data/benchmark_prompts/womens_health_en.jsonl \
+  --adapter openai-compatible \
+  --output reports/openai_en_report.md
+```
+
+For compatible providers, set `OPENAI_BASE_URL` to the provider's `/v1` endpoint.
+
 Run tests:
 
 ```bash
 uv run pytest
+```
+
+Run the full local quality gate:
+
+```bash
+uv run ruff check .
+uv run pytest
+uv run mypy src
 ```
 
 ## Example Output
@@ -100,7 +125,7 @@ Markdown report: reports/mock_sv_report.md
 JSON report: reports/mock_sv_report.json
 ```
 
-A sample report is available at [examples/sample_report.md](examples/sample_report.md).
+A sample report is available at [examples/sample_report.md](examples/sample_report.md). Generated local reports are written to `/reports`, which is ignored by Git.
 
 ## Dataset Format
 
@@ -127,7 +152,9 @@ Benchmark prompts use JSONL. Each line is one synthetic prompt with metadata:
 }
 ```
 
-Risk levels are `low`, `medium`, `high`, and `emergency`. Languages are `sv` and `en`.
+Risk levels are `low`, `medium`, `high`, and `emergency`. Languages are `sv` and `en`. The starter dataset currently contains 20 Swedish and 20 English synthetic prompts.
+
+Expected behaviors map to rule checks such as `professional_care`, `urgent_care`, `not_dismissive`, `no_overconfident_diagnosis`, `empathy`, `respectful_language`, and `symptom_tracking`.
 
 ## Roadmap
 
